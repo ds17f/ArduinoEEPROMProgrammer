@@ -1,0 +1,70 @@
+#include <Arduino.h>
+#include "eeprom.h"
+
+// 4-bit hex decoder for common anode 7-segment display
+byte data[] = { 0x81, 0xcf, 0x92, 0x86, 0xcc, 0xa4, 0xa0, 0x8f, 0x80, 0x84, 0x88, 0xe0, 0xb1, 0xc2, 0xb0, 0xb8 };
+
+// 4-bit hex decoder for common cathode 7-segment display
+// byte data[] = { 0x7e, 0x30, 0x6d, 0x79, 0x33, 0x5b, 0x5f, 0x70, 0x7f, 0x7b, 0x77, 0x1f, 0x4e, 0x3d, 0x4f, 0x47 };
+
+bool wipeData = false;
+bool writeData = false;
+bool readData = false;
+bool readSerial = true;
+
+void setup() {
+  // put your setup code here, to run once:
+  setupPins();
+  Serial.begin(9600);
+
+//   int eepromLength = sizeof(FastLoad_27256_BIN) -1;
+  int eepromLength = 16;
+  byte *eepromData = data;
+
+  if (wipeData) {
+    // Erase entire EEPROM
+    Serial.print("Erasing EEPROM");
+    for (int address = 0; address < eepromLength ; address += 1) {
+        writeEEPROM(address, 0xff);
+
+        if (address % 64 == 0) {
+        Serial.println(address);
+        }
+    }
+    Serial.println(" done");
+  }
+
+
+  if (writeData) {
+    // Program data bytes
+    Serial.println("Programming EEPROM");
+    for (int address = 0; address < eepromLength; address += 1) {
+        writeEEPROM(address, eepromData[address]);
+
+        if (address % 64 == 0) {
+            Serial.println(address);
+        }
+    }
+    Serial.println(" done");
+  }
+
+  if (readData) {
+    // Read and print out the contents of the EERPROM
+    Serial.println("Reading EEPROM");
+    printContents(eepromLength);
+  }
+}
+
+
+byte address = 0x01;
+void loop() {
+  // put your main code here, to run repeatedly:
+  if (readSerial) {
+    setAddress(address, false);
+    if(Serial.available() > 0){
+        address = address << 1;
+        setAddress(address, false);
+        Serial.println("RECEIVED");
+    }
+  }
+}

@@ -1,0 +1,46 @@
+#include <Arduino.h>
+// Set the pins that we use for serial writes to the shift registers
+#define SHIFT_DATA  2
+#define SHIFT_CLK   3
+#define SHIFT_LATCH 4
+
+/**
+ * writes an address out to the pins
+*/
+void writeAddress(int address, bool outputEnable) {
+  shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, (address >> 8) | (outputEnable ? 0x00 : 0x80));
+  shiftOut(SHIFT_DATA, SHIFT_CLK, MSBFIRST, address);
+
+  // Send a clock pulse to write data to the storage register
+  digitalWrite(SHIFT_LATCH, LOW);
+  digitalWrite(SHIFT_LATCH, HIGH);
+  digitalWrite(SHIFT_LATCH, LOW);
+
+}
+
+
+void setup() {
+  // Set the serial shift register pins to output mode
+  pinMode(SHIFT_DATA, OUTPUT);
+  pinMode(SHIFT_CLK, OUTPUT);
+  pinMode(SHIFT_LATCH, OUTPUT);
+
+  writeAddress(0, true);
+  writeAddress(65535, true);
+  // Shift some data out to the chip
+  // Clear whatever may be in the registers
+  // writeAddress(65535, true);
+  // writeAddress(1234, true);
+
+}
+
+
+void loop() {
+  bool addressBit = true;
+  int START = 1;
+  for (unsigned i = START; i <= 0x4000; i = i << 1) {
+    addressBit = ! addressBit;
+    writeAddress(i, addressBit);
+    delay(500);
+  }
+}
