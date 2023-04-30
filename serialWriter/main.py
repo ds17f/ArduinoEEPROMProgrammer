@@ -6,7 +6,7 @@ import time
 
 CONTINUE = b'\xFF'
 
-PORT = "/dev/ttyACM18"
+PORT = "/dev/ttyACM19"
 BAUD = 9600
 TIMEOUT = 1000
 
